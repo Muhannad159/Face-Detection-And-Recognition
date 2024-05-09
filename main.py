@@ -83,7 +83,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         """
         self.file_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.pgm)")
         self.loaded_image = cv2.imread(self.file_path)
-        self.loaded_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+        self.loaded_image = cv2.cvtColor(self.loaded_image, cv2.COLOR_BGR2RGB)
         self.display_image(self.loaded_image, label)
 
     def display_image(self, image, label):
