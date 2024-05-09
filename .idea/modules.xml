@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/Face-Recognition.iml" filepath="$PROJECT_DIR$/.idea/Face-Recognition.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../Image_filtering/Image_filtering/Image-Processing/.idea/Image-Processing.iml" filepath="$PROJECT_DIR$/../Image_filtering/Image_filtering/Image-Processing/.idea/Image-Processing.iml" />
     </modules>
   </component>
 </project>
