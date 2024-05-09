@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUiType
 import numpy as np
 import math
-import streamlit as st
 
 import matplotlib.pyplot as plt
 import scipy as sp
@@ -54,6 +53,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.setupUi(self)
         self.handle_buttons()
         self.setWindowTitle("Face Detection")
+        self.loaded_image = None
 
     def handle_buttons(self):
         """
@@ -73,14 +73,14 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.load_image(label)
         # elif event.button() == Qt.RightButton:
         #     self.detect_face()
-        
+
     def load_image(self, label):
         """
         Method to load the image and display it on the GUI.
         """
         self.file_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.pgm)")
-        self.image = cv2.imread(self.file_path)
-        self.image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+        self.loaded_image = cv2.imread(self.file_path)
+        self.loaded_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
         self.display_image(self.image, label)
 
     def display_image(self, image, label):
