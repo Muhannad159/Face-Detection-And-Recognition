@@ -63,7 +63,7 @@
            <string notr="true">background-color: rgb(77, 77, 77);</string>
           </property>
           <property name="text">
-           <string>TextLabel</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -98,7 +98,7 @@
            <string notr="true">background-color: rgb(67, 67, 67);</string>
           </property>
           <property name="text">
-           <string>TextLabel</string>
+           <string/>
           </property>
          </widget>
         </item>
