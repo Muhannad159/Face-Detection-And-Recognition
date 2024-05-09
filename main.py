@@ -36,6 +36,7 @@ from skimage.filters import sobel
 import cv2
 from scipy.ndimage import gaussian_filter
 from PIL import Image, ImageDraw
+from FaceDetection import face_detection , draw_rectangle
 
 import time
 
@@ -54,12 +55,14 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.handle_buttons()
         self.setWindowTitle("Face Detection")
         self.loaded_image = None
+        self.image_with_faces = None
 
     def handle_buttons(self):
         """
         Connects buttons to their respective functions and initializes the application.
         """
         self.label.mouseDoubleClickEvent = lambda event: self.handle_mouse(event, label=self.label)
+        self.pushButton.clicked.connect(self.face_detection)
         pass
 
     def handle_mouse(self, event, label):
@@ -80,7 +83,11 @@ class MainApp(QMainWindow, FORM_CLASS):
         """
         self.file_path, _ = QFileDialog.getOpenFileName(self, "Open Image", "", "Image Files (*.png *.jpg *.jpeg *.bmp *.pgm)")
         self.loaded_image = cv2.imread(self.file_path)
+<<<<<<< Updated upstream
         self.loaded_image = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
+=======
+        self.loaded_image = cv2.cvtColor(self.loaded_image, cv2.COLOR_BGR2RGB)
+>>>>>>> Stashed changes
         self.display_image(self.loaded_image, label)
 
     def display_image(self, image, label):
@@ -100,6 +107,14 @@ class MainApp(QMainWindow, FORM_CLASS):
         label.setAlignment(Qt.AlignCenter)
         label.setScaledContents(True)
         label.show()
+
+    def face_detection(self):
+        """
+        Method to detect the face in the image.
+        """
+        faces = face_detection(self.loaded_image)
+        self.image_with_faces = draw_rectangle(self.loaded_image, faces)
+        self.display_image(self.image_with_faces, self.label_2)
 
 
 def main():
