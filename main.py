@@ -63,6 +63,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         """
         self.label.mouseDoubleClickEvent = lambda event: self.handle_mouse(event, label=self.label)
         self.pushButton.clicked.connect(self.face_detection)
+        self.pushButton_2.clicked.connect(self.recognize_face)
         pass
 
     def handle_mouse(self, event, label):
@@ -111,6 +112,12 @@ class MainApp(QMainWindow, FORM_CLASS):
         faces = face_detection(self.loaded_image)
         self.image_with_faces = draw_rectangle(self.loaded_image, faces)
         self.display_image(self.image_with_faces, self.label_2)
+
+    def recognize_face(self):
+        """
+        Method to recognize the face in the image.
+        """
+        pass
 
 
 def main():
