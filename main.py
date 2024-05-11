@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.uic import loadUiType
 import numpy as np
 import math
-
+from PCA import detect_faces
 import matplotlib.pyplot as plt
 import scipy as sp
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -94,6 +94,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         Args:
             image: The image to be displayed.
         """
+        
         height, width, channel = image.shape
         # Resize label to fit the image
         label.resize(width, height)
@@ -117,7 +118,14 @@ class MainApp(QMainWindow, FORM_CLASS):
         """
         Method to recognize the face in the image.
         """
-        pass
+        image = detect_faces(self.file_path)
+        image = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+        self.display_image(image, self.label_2)
+        
+        
+
+        # self.display_image(image, self.label_2)
+        
 
 
 def main():
