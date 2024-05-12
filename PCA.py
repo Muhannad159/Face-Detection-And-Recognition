@@ -2,17 +2,23 @@ import numpy as np
 import cv2
 import os
 
+
 def load_images(root_folder, img_width=64, img_height=64):
     image_paths = []
     image_list = []
     images_not_flattened = []
-    
+    labels = []
+
     # Get all subdirectories in the root folder
     for folder in os.listdir(root_folder):
         if os.path.isdir(os.path.join(root_folder, folder)):
             subdir_path = os.path.join(root_folder, folder)
             # Collect all images in the subdirectory
-            image_files = [os.path.join(subdir_path, file) for file in os.listdir(subdir_path) if file.endswith(".pgm") or file.endswith(".jpg")]
+            image_files = []
+            for file in os.listdir(subdir_path):
+                if file.endswith(".pgm") or file.endswith(".jpg") or file.endswith(".png"):
+                    image_files.append(os.path.join(subdir_path, file))
+                    labels.append(folder)
             image_paths.extend(image_files)
 
     # Read and resize images
@@ -22,8 +28,9 @@ def load_images(root_folder, img_width=64, img_height=64):
         image = cv2.resize(image, (img_width, img_height))
         images_not_flattened.append(image)
         image_list.append(image.flatten())  # Flatten the image to a 1D array
-   
-    return np.array(image_list),images_not_flattened,image_paths
+
+    return np.array(image_list), images_not_flattened, image_paths, labels
+
 
 def calculate_covariance_matrix(images):
     # Compute the mean image
@@ -36,6 +43,7 @@ def calculate_covariance_matrix(images):
     print("shape of covariance matrix: ", covariance_matrix.shape)
     return covariance_matrix, mean_image
 
+
 def get_eigenvalues_and_eigenvectors(covariance_matrix):
     # Use numpy.linalg.eig to compute eigenvalues and eigenvectors
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
@@ -44,11 +52,12 @@ def get_eigenvalues_and_eigenvectors(covariance_matrix):
 
     # Normalize eigenvectors (each eigenvector is a column in the returned eigenvectors matrix)
     eigenvectors = eigenvectors / np.linalg.norm(eigenvectors, axis=0)
-    
+
     return eigenvalues, eigenvectors
 
+
 def pca_analysis(root_folder):
-    images,images_not_flattened,image_paths = load_images(root_folder)  # Load and preprocess images
+    images, images_not_flattened, image_paths, labels = load_images(root_folder)  # Load and preprocess images
     covariance_matrix, mean_image = calculate_covariance_matrix(images)  # Calculate covariance and mean
     eigenvalues, eigenvectors = get_eigenvalues_and_eigenvectors(covariance_matrix)  # Get eigenvalues and eigenvectors
     # Sort eigenvalues in descending order
@@ -63,41 +72,36 @@ def pca_analysis(root_folder):
     print("principal_components shape: ", principal_components.shape)
     print("projected_data shape: ", projected_data.shape)
     # detect_faces("Dataset/Testing/s3/2.pgm",principal_components,projected_data)
-    return principal_components,projected_data,images_not_flattened,image_paths
-    
-def detect_faces(image_path, img_width=64, img_height=64):  
-    principal_components,projected_data,images_not_flattened,image_path_t = pca_analysis("Dataset/Training")
-    
+    return principal_components, projected_data, images_not_flattened, image_paths, labels
+
+
+def detect_faces(image_path, recognition_threshold, principal_components, projected_data, labels, img_width=64, img_height=64):
+
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        # print("image shape: ", image.shape)
+    # print("image shape: ", image.shape)
     image = cv2.resize(image, (img_width, img_height))
     image = image.flatten()
     projected_image = np.dot(image, principal_components)
-   
-    # distance = projected_data - 
+
+    # distance = projected_data -
     minimum_distance = float('inf')
+    face_id = -1
+    # print("labels: ", labels)
+    # print("projected_data shape: ", projected_data.shape)
+    # print("labels shape: ", len(labels))
     for i in range(projected_data.shape[0]):
         eclidian_distance = np.linalg.norm(projected_data[i] - projected_image)
-        if eclidian_distance < minimum_distance:
+        if eclidian_distance < recognition_threshold and eclidian_distance < minimum_distance:
             minimum_distance = eclidian_distance
             face_id = i
-    print("Face ID: ", face_id)
-    print("image_path: ", image_path_t[face_id])
-    return images_not_flattened[face_id]
-    
-    
-
-
-
-
-
-
+    # print("minimum distance: ", minimum_distance)
+    return face_id
 
 
 def main():
     print("Loading images...")
     pca_analysis("Dataset/Training")
-   
+
 
 if __name__ == "__main__":
     main()
