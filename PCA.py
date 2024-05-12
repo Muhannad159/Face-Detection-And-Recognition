@@ -28,6 +28,7 @@ def load_images(root_folder, img_width=64, img_height=64):
         image = cv2.resize(image, (img_width, img_height))
         images_not_flattened.append(image)
         image_list.append(image.flatten())  # Flatten the image to a 1D array
+    print("images matrix", np.array(image_list).shape)
 
     return np.array(image_list), images_not_flattened, image_paths, labels
 
@@ -49,13 +50,14 @@ def calculate_covariance_matrix(image_list):
     # Calculate the covariance matrix
     # covariance_matrix = 1/(len(image_list)-1) * np.dot(mean_subtracted_images.T, mean_subtracted_images)
     covariance_matrix = np.cov(mean_subtracted_images, rowvar=False)
+    print("covariance matrix shape: ", covariance_matrix.shape)
     return covariance_matrix, mean
 
 def get_eigenvalues_and_eigenvectors(covariance_matrix):
     # Use numpy.linalg.eig to compute eigenvalues and eigenvectors
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     print("done computing eigenvectors")
-    # print("shape of eigenvectors: ", eigenvectors.shape)
+    print("shape of eigenvectors: ", eigenvectors.shape)
 
     # Normalize eigenvectors (each eigenvector is a column in the returned eigenvectors matrix)
     eigenvectors = eigenvectors / np.linalg.norm(eigenvectors, axis=0)
@@ -71,23 +73,26 @@ def pca_analysis(root_folder):
     sorted_indices = np.argsort(eigenvalues)[::-1]
     eigenvalues = eigenvalues[sorted_indices]
     eigenvectors = eigenvectors[:, sorted_indices]
+    print("eigenvectors shape 2: ", eigenvectors.shape)
     cumulative_variance = np.cumsum(eigenvalues) / np.sum(eigenvalues)
     desired_variance = 0.90  # 90% variance explained
     num_components = np.argmax(cumulative_variance >= desired_variance) + 1
     principal_components = eigenvectors[:, :num_components]
+    images = images - mean_image
     projected_data = np.dot(images, principal_components)
     print("principal_components shape: ", principal_components.shape)
     print("projected_data shape: ", projected_data.shape)
     # detect_faces("Dataset/Testing/s3/2.pgm",principal_components,projected_data)
-    return principal_components, projected_data, images_not_flattened, image_paths, labels
+    return principal_components, projected_data, images_not_flattened, image_paths, labels, mean_image
 
 
-def detect_faces(image_path, recognition_threshold, principal_components, projected_data, labels, img_width=64, img_height=64):
+def detect_faces(image_path, recognition_threshold, principal_components, projected_data, labels, mean_image, img_width=64, img_height=64):
 
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     # print("image shape: ", image.shape)
     image = cv2.resize(image, (img_width, img_height))
     image = image.flatten()
+    image = image - mean_image
     projected_image = np.dot(image, principal_components)
 
     # distance = projected_data -
@@ -101,7 +106,7 @@ def detect_faces(image_path, recognition_threshold, principal_components, projec
         if eclidian_distance < recognition_threshold and eclidian_distance < minimum_distance:
             minimum_distance = eclidian_distance
             face_id = i
-    # print("minimum distance: ", minimum_distance)
+    print("minimum distance: ", minimum_distance)
     return face_id
 
 

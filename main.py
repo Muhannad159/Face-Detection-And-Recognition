@@ -56,10 +56,10 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.image_with_faces = None
         self.file_path = None
         (self.training_principal_components, self.training_projected_data, self.training_images_not_flattened,
-         self.training_image_paths, self.training_labels) = PCA.pca_analysis(
+         self.training_image_paths, self.training_labels, self.mean_image_training) = PCA.pca_analysis(
             "Dataset/Training"
         )
-        self.testing_principal_components, self.testing_projected_data, self.testing_images_not_flattened, self.testing_image_paths, self.testing_labels = PCA.pca_analysis(
+        self.testing_principal_components, self.testing_projected_data, self.testing_images_not_flattened, self.testing_image_paths, self.testing_labels, self.mean_image_testing = PCA.pca_analysis(
             "Dataset/Testing"
         )
         self.predicted_labels = []
@@ -130,7 +130,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         """
         threshold = self.recog_slider.value()
         face_id = PCA.detect_faces(self.file_path, threshold, self.training_principal_components,
-                                   self.training_projected_data, self.training_labels)
+                                   self.training_projected_data, self.training_labels, self.mean_image_training)
         if face_id not in [-1, None]:
             image = cv2.imread(self.training_image_paths[face_id])
             self.display_image(image, self.label_2)
@@ -155,7 +155,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         epsilon = 1e-10
         for i in range(len(self.testing_image_paths)):
             face_id = PCA.detect_faces(self.testing_image_paths[i], threshold, self.training_principal_components,
-                                       self.training_projected_data, self.training_labels)
+                                       self.training_projected_data, self.training_labels, self.mean_image_testing)
             self.predicted_labels.append(self.testing_labels[i])
             if self.training_labels[face_id] == self.testing_labels[i] and face_id != -1:
                 true_positive += 1
