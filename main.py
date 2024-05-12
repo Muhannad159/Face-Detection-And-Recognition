@@ -201,7 +201,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         if len(false_positive_rate) > 0:
             auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
             self.auc_lbl.setText("AUC Score : " + str(auc_value))
-            self.plot_roc( false_positive_rate, true_positive_rate)
+            self.plot_roc( false_positive_rate, true_positive_rate, auc_value)
             
             
 
@@ -226,13 +226,14 @@ class MainApp(QMainWindow, FORM_CLASS):
 
         return auc_value
 
-    def plot_roc(self, false_positive_rate, true_positive_rate):
+    def plot_roc(self, false_positive_rate, true_positive_rate, auc_value):
         fig = plt.figure(figsize=(8,6))
         plt.plot(false_positive_rate, true_positive_rate)
         plt.plot([0, 1], [0, 1], '--', color='gray')  # Random classifier line
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
-        plt.title('ROC Curve')
+        plt.title('ROC Curve with threshold = ' + str(self.recog_slider_2.value()) + ' and AUC = ' + str(auc_value))
+        plt.text(0.6, 0.2, color='red', s='AUC = ' + str(auc_value))
         plt.grid(True)
         #plt.savefig("ROC_CURVE.png")
          # Render the plot onto a numpy array
