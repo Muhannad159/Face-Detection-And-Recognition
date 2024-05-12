@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PyQt5.QtWidgets import QDialog, QVBoxLayout
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget
 from sklearn.metrics import auc
 import os
 os.environ['MPLBACKEND'] = 'Qt5Agg'
@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import PCA
 from FaceDetection import face_detection, draw_rectangle
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure
 
@@ -136,6 +137,7 @@ class MainApp(QMainWindow, FORM_CLASS):
             self.label_2.setText("Face not recognized")
 
         # self.display_image(image, self.label_2)
+        self.perform_pca()
 
     def perform_pca(self):
         """
@@ -148,7 +150,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         false_positive_rate = []
         true_positive_rate = []
         # threshold = self.recog_slider.value()
-        threshold = 1861
+        threshold = 1931
         epsilon = 1e-10
         for i in range(len(self.testing_image_paths)):
             face_id = PCA.detect_faces(self.testing_image_paths[i], threshold, self.training_principal_components,
@@ -197,10 +199,11 @@ class MainApp(QMainWindow, FORM_CLASS):
         if len(false_positive_rate) > 0:
             auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
             self.auc_lbl.setText("AUC Score : " + str(auc_value))
+            self.plot_roc(false_positive_rate, true_positive_rate)
             # self.plot_roc_curve(false_positive_rate, true_positive_rate, auc_value)
-            roc_widget = ROCWidget(self)
-            plot_roc_curve(false_positive_rate, false_positive_rate, self.roc_widget)
-            self.layout.addWidget(self.roc_widget)
+            # roc_widget = ROCWidget(self)
+            # plot_roc_curve(false_positive_rate, false_positive_rate, self.roc_widget)
+            # self.layout.addWidget(self.roc_widget)
 
     def calculate_auc(self, false_positive_rate, true_positive_rate):
         # Sort the TPR values in ascending order
@@ -255,7 +258,27 @@ class MainApp(QMainWindow, FORM_CLASS):
 
 
 
-
+    def plot_roc(self, false_positive_rate, true_positive_rate):
+        fig = plt.figure(figsize=(8,6))
+        plt.plot(false_positive_rate, true_positive_rate)
+        plt.plot([0, 1], [0, 1], '--', color='gray')  # Random classifier line
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC Curve')
+        plt.grid(True)
+        # plt.savefig("ROC_CURVE.png")
+         # Render the plot onto a numpy array
+        canvas = FigureCanvas(fig)
+        canvas.draw()  # Render the canvas
+        width, height = fig.get_size_inches() * fig.get_dpi()
+        img = np.frombuffer(canvas.buffer_rgba(), dtype=np.uint8).reshape(int(height), int(width), 4)
+        
+        # Convert numpy array to QImage
+        qimage = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGBA8888)
+        
+        # Convert QImage to QPixmap and set it as the pixmap of roc_lbl
+        pixmap = QPixmap.fromImage(qimage)
+        self.roc_lbl.setPixmap(pixmap)
     def recognize_face_slider_change(self):
         self.recog_slider_lbl.setText("Recognition threshold : " + str(self.recog_slider.value()))
         self.perform_pca()
