@@ -200,8 +200,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         # ROC Curve and AUC Score
         if len(false_positive_rate) > 0:
             auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
-            self.auc_lbl.setText("AUC Score : " + str(auc_value))
-            self.plot_roc( false_positive_rate, true_positive_rate, auc_value)
+            self.plot_roc(false_positive_rate, true_positive_rate, auc_value)
             
             
 
