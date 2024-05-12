@@ -73,6 +73,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.pushButton.clicked.connect(self.face_detection)
         self.pushButton_2.clicked.connect(self.recognize_face)
         self.recog_slider.valueChanged.connect(self.recognize_face_slider_change)
+        self.recog_slider_2.valueChanged.connect(self.recognize_face_slider_change_2)
 
     def handle_mouse(self, event, label):
         """
@@ -150,7 +151,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         false_negative = 0
         false_positive_rate = []
         true_positive_rate = []
-        threshold = self.recog_slider.value()
+        threshold = self.recog_slider_lbl_2.value()
         epsilon = 1e-10
         for i in range(len(self.testing_image_paths)):
             face_id = PCA.detect_faces(self.testing_image_paths[i], threshold, self.training_principal_components,
@@ -248,8 +249,10 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.roc_lbl.setPixmap(pixmap)
     def recognize_face_slider_change(self):
         self.recog_slider_lbl.setText("Recognition threshold : " + str(self.recog_slider.value()))
-        self.perform_pca()
 
+    def recognize_face_slider_change_2(self):
+        self.recog_slider_lbl_2.setText("Recognition threshold : " + str(self.recog_slider.value()))
+        self.perform_pca()
 
 def main():
     """
