@@ -261,10 +261,10 @@
               <item>
                <widget class="QSlider" name="recog_slider_2">
                 <property name="minimum">
-                 <number>500</number>
+                 <number>100</number>
                 </property>
                 <property name="maximum">
-                 <number>5000</number>
+                 <number>2500</number>
                 </property>
                 <property name="singleStep">
                  <number>50</number>
