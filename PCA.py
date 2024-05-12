@@ -32,17 +32,24 @@ def load_images(root_folder, img_width=64, img_height=64):
     return np.array(image_list), images_not_flattened, image_paths, labels
 
 
-def calculate_covariance_matrix(images):
-    # Compute the mean image
-    mean_image = np.mean(images, axis=0)
-    # Subtract the mean from each image
-    centered_images = images - mean_image
-    # Compute the covariance matrix
-    covariance_matrix = np.cov(centered_images, rowvar=False)
-    print("done computing covariance matrix")
-    print("shape of covariance matrix: ", covariance_matrix.shape)
-    return covariance_matrix, mean_image
+def calculate_covariance_matrix(image_list):
+    """
+    Method to calculate the covariance matrix of the image list.
 
+    Args:
+        image_list: The list of images.
+
+    Returns:
+        The covariance matrix.
+    """
+    # Calculate the mean of the images
+    mean = np.mean(image_list, axis=0)
+    # Subtract the mean from the images
+    mean_subtracted_images = image_list - mean
+    # Calculate the covariance matrix
+    # covariance_matrix = 1/(len(image_list)-1) * np.dot(mean_subtracted_images.T, mean_subtracted_images)
+    covariance_matrix = np.cov(mean_subtracted_images, rowvar=False)
+    return covariance_matrix, mean
 
 def get_eigenvalues_and_eigenvectors(covariance_matrix):
     # Use numpy.linalg.eig to compute eigenvalues and eigenvectors

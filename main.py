@@ -13,7 +13,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget
-from sklearn.metrics import auc
+from sklearn.metrics import auc, roc_curve
 import os
 os.environ['MPLBACKEND'] = 'Qt5Agg'
 import matplotlib.pyplot as plt
@@ -62,8 +62,9 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.testing_principal_components, self.testing_projected_data, self.testing_images_not_flattened, self.testing_image_paths, self.testing_labels = PCA.pca_analysis(
             "Dataset/Testing"
         )
+        self.predicted_labels = []
         self.perform_pca()
-
+        
     def handle_buttons(self):
         """
         Connects buttons to their respective functions and initializes the application.
@@ -149,12 +150,12 @@ class MainApp(QMainWindow, FORM_CLASS):
         false_negative = 0
         false_positive_rate = []
         true_positive_rate = []
-        # threshold = self.recog_slider.value()
-        threshold = 1931
+        threshold = self.recog_slider.value()
         epsilon = 1e-10
         for i in range(len(self.testing_image_paths)):
             face_id = PCA.detect_faces(self.testing_image_paths[i], threshold, self.training_principal_components,
                                        self.training_projected_data, self.training_labels)
+            self.predicted_labels.append(self.testing_labels[i])
             if self.training_labels[face_id] == self.testing_labels[i] and face_id != -1:
                 true_positive += 1
             elif self.training_labels[face_id] != self.testing_labels[i] and face_id != -1:
@@ -199,11 +200,9 @@ class MainApp(QMainWindow, FORM_CLASS):
         if len(false_positive_rate) > 0:
             auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
             self.auc_lbl.setText("AUC Score : " + str(auc_value))
-            self.plot_roc(false_positive_rate, true_positive_rate)
-            # self.plot_roc_curve(false_positive_rate, true_positive_rate, auc_value)
-            # roc_widget = ROCWidget(self)
-            # plot_roc_curve(false_positive_rate, false_positive_rate, self.roc_widget)
-            # self.layout.addWidget(self.roc_widget)
+            self.plot_roc( false_positive_rate, true_positive_rate)
+            
+            
 
     def calculate_auc(self, false_positive_rate, true_positive_rate):
         # Sort the TPR values in ascending order
@@ -226,38 +225,6 @@ class MainApp(QMainWindow, FORM_CLASS):
 
         return auc_value
 
-    def plot_roc_curve(self, false_positive_rate, true_positive_rate, auc_value):
-        """
-        Method to plot the ROC curve on self.roc_lbl or self.roc_widget.
-        """
-        # Create a new figure for the ROC curve
-        fig = Figure()
-        ax = fig.add_subplot(111)
-
-        # Plot the ROC curve
-        ax.plot(false_positive_rate, true_positive_rate, color='blue', label='ROC Curve')
-        ax.plot([0, 1], [0, 1], color='gray', linestyle='--', label='Random Guessing')
-        ax.set_xlabel('False Positive Rate')
-        ax.set_ylabel('True Positive Rate')
-        ax.set_title('Receiver Operating Characteristic (ROC) Curve')
-        ax.legend()
-
-        # Display the AUC value on the plot
-        ax.text(0.6, 0.4, f'AUC = {auc_value:.2f}', fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
-
-        # Create a canvas widget to display the plot
-        canvas = FigureCanvas(fig)
-        canvas_widget = QWidget()
-        layout = QVBoxLayout()
-        layout.addWidget(canvas)
-        canvas_widget.setLayout(layout)
-
-        # Display the canvas widget on the GUI
-        self.roc_lbl.setWidget(canvas_widget)
-
-
-
-
     def plot_roc(self, false_positive_rate, true_positive_rate):
         fig = plt.figure(figsize=(8,6))
         plt.plot(false_positive_rate, true_positive_rate)
@@ -266,7 +233,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         plt.ylabel('True Positive Rate')
         plt.title('ROC Curve')
         plt.grid(True)
-        # plt.savefig("ROC_CURVE.png")
+        #plt.savefig("ROC_CURVE.png")
          # Render the plot onto a numpy array
         canvas = FigureCanvas(fig)
         canvas.draw()  # Render the canvas
