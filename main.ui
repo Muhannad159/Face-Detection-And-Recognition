@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>958</width>
+    <width>1004</width>
     <height>599</height>
    </rect>
   </property>
@@ -138,10 +138,10 @@
         <item>
          <widget class="QSlider" name="recog_slider">
           <property name="minimum">
-           <number>800</number>
+           <number>500</number>
           </property>
           <property name="maximum">
-           <number>1800</number>
+           <number>5000</number>
           </property>
           <property name="singleStep">
            <number>50</number>
@@ -249,7 +249,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>958</width>
+     <width>1004</width>
      <height>21</height>
     </rect>
    </property>

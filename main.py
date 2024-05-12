@@ -2,17 +2,43 @@ import sys
 from os import path
 
 import cv2
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QImage
+from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtGui import QPixmap, QImage, QPainter, QRegion, QPen
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.uic import loadUiType
 from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5.QtWidgets import QDialog, QVBoxLayout
+from sklearn.metrics import auc
+import os
+os.environ['MPLBACKEND'] = 'Qt5Agg'
+import matplotlib.pyplot as plt
 
 import PCA
 from FaceDetection import face_detection, draw_rectangle
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.figure import Figure
+
+class ROCWidget(FigureCanvasQTAgg):
+    def __init__(self, parent=None):
+        self.fig = Figure()
+        self.ax = self.fig.add_subplot(111)
+        super().__init__(self.fig)
+
+    def plot_roc_curve(self, fpr, tpr):
+        self.ax.plot(fpr, tpr)
+        self.ax.set_xlabel('False Positive Rate')
+        self.ax.set_ylabel('True Positive Rate')
+        self.ax.set_title('Receiver Operating Characteristic Curve')
+        self.draw()
+
+def plot_roc_curve(fpr, tpr, roc_widget):
+    roc_widget.plot_roc_curve(fpr, tpr)
 
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
@@ -121,8 +147,9 @@ class MainApp(QMainWindow, FORM_CLASS):
         false_negative = 0
         false_positive_rate = []
         true_positive_rate = []
-        threshold = self.recog_slider.value()
-
+        # threshold = self.recog_slider.value()
+        threshold = 1861
+        epsilon = 1e-10
         for i in range(len(self.testing_image_paths)):
             face_id = PCA.detect_faces(self.testing_image_paths[i], threshold, self.training_principal_components,
                                        self.training_projected_data, self.training_labels)
@@ -135,13 +162,19 @@ class MainApp(QMainWindow, FORM_CLASS):
             else:
                 true_negative += 1
 
-            if true_negative + false_positive == 0:
-                false_positive_rate.append(0)
-                true_positive_rate.append(0)
-            else:
-                true_positive_rate.append(true_positive / (true_positive + false_negative))
-                false_positive_rate.append(false_positive / (false_positive + true_negative))
+            false_positive_rate.append(false_positive / (false_positive + true_negative + epsilon))
+            true_positive_rate.append(true_positive / (true_positive + false_negative + epsilon))
 
+        # plot the true positive rate and false positive rate on self.roc_widget which is a Qwidget
+
+        print("True Positive : ", true_positive)
+        print("False Positive : ", false_positive)
+        print("True Negative : ", true_negative)
+        print("False Negative : ", false_negative)
+        print("True Positive Rate : ", true_positive_rate)
+        print("False Positive Rate : ", false_positive_rate)
+        print("len(true_positive_rate) : ", len(true_positive_rate))
+        print("len(false_positive_rate) : ", len(false_positive_rate))
         accuracy = (true_positive + true_negative) / (true_positive + true_negative + false_positive + false_negative)
         precision = true_positive / (true_positive + false_positive)
         recall = true_positive / (true_positive + false_negative)
@@ -164,7 +197,10 @@ class MainApp(QMainWindow, FORM_CLASS):
         if len(false_positive_rate) > 0:
             auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
             self.auc_lbl.setText("AUC Score : " + str(auc_value))
-            self.plot_roc_curve(false_positive_rate, true_positive_rate, auc_value)
+            # self.plot_roc_curve(false_positive_rate, true_positive_rate, auc_value)
+            roc_widget = ROCWidget(self)
+            plot_roc_curve(false_positive_rate, false_positive_rate, self.roc_widget)
+            self.layout.addWidget(self.roc_widget)
 
     def calculate_auc(self, false_positive_rate, true_positive_rate):
         # Sort the TPR values in ascending order
@@ -189,24 +225,34 @@ class MainApp(QMainWindow, FORM_CLASS):
 
     def plot_roc_curve(self, false_positive_rate, true_positive_rate, auc_value):
         """
-        Method to plot the ROC curve on self.roc_lbl.
+        Method to plot the ROC curve on self.roc_lbl or self.roc_widget.
         """
-        fig, ax = plt.subplots()
-        ax.plot(false_positive_rate, true_positive_rate, label="ROC Curve")
-        ax.plot([0, 1], [0, 1], linestyle="--", label="Random Guess")
-        ax.set_xlabel("False Positive Rate")
-        ax.set_ylabel("True Positive Rate")
-        ax.set_title("Receiver Operating Characteristic (ROC) Curve")
+        # Create a new figure for the ROC curve
+        fig = Figure()
+        ax = fig.add_subplot(111)
+
+        # Plot the ROC curve
+        ax.plot(false_positive_rate, true_positive_rate, color='blue', label='ROC Curve')
+        ax.plot([0, 1], [0, 1], color='gray', linestyle='--', label='Random Guessing')
+        ax.set_xlabel('False Positive Rate')
+        ax.set_ylabel('True Positive Rate')
+        ax.set_title('Receiver Operating Characteristic (ROC) Curve')
         ax.legend()
 
-        # Create a canvas and draw the plot
-        canvas = FigureCanvas(fig)
-        canvas.draw()
+        # Display the AUC value on the plot
+        ax.text(0.6, 0.4, f'AUC = {auc_value:.2f}', fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
 
-        # Convert the canvas to a QPixmap and set it to the QLabel
-        roc_pixmap = QPixmap(canvas.size())
-        canvas.render(roc_pixmap)
-        self.roc_lbl.setPixmap(roc_pixmap)
+        # Create a canvas widget to display the plot
+        canvas = FigureCanvas(fig)
+        canvas_widget = QWidget()
+        layout = QVBoxLayout()
+        layout.addWidget(canvas)
+        canvas_widget.setLayout(layout)
+
+        # Display the canvas widget on the GUI
+        self.roc_lbl.setWidget(canvas_widget)
+
+
 
 
 
