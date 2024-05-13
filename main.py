@@ -155,7 +155,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         epsilon = 1e-10
         for i in range(len(self.testing_image_paths)):
             face_id = PCA.detect_faces(self.testing_image_paths[i], threshold, self.training_principal_components,
-                                       self.training_projected_data, self.training_labels, self.mean_image_testing)
+                                       self.training_projected_data, self.training_labels, self.mean_image_training)
             self.predicted_labels.append(self.testing_labels[i])
             if self.training_labels[face_id] == self.testing_labels[i] and face_id != -1:
                 true_positive += 1
@@ -168,8 +168,6 @@ class MainApp(QMainWindow, FORM_CLASS):
 
             false_positive_rate.append(false_positive / (false_positive + true_negative + epsilon))
             true_positive_rate.append(true_positive / (true_positive + false_negative + epsilon))
-
-        # plot the true positive rate and false positive rate on self.roc_widget which is a Qwidget
 
         print("True Positive : ", true_positive)
         print("False Positive : ", false_positive)
@@ -198,9 +196,8 @@ class MainApp(QMainWindow, FORM_CLASS):
         self.f1_score_lbl.setText("F1 Score : " + str(f1_score))
 
         # ROC Curve and AUC Score
-        if len(false_positive_rate) > 0:
-            auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
-            self.plot_roc(false_positive_rate, true_positive_rate, auc_value)
+        auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
+        self.plot_roc(false_positive_rate, true_positive_rate, auc_value)
             
             
 
@@ -226,7 +223,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         return auc_value
 
     def plot_roc(self, false_positive_rate, true_positive_rate, auc_value):
-        fig = plt.figure(figsize=(8,6))
+        fig = plt.figure(figsize=(8, 6))
         plt.plot(false_positive_rate, true_positive_rate)
         plt.plot([0, 1], [0, 1], '--', color='gray')  # Random classifier line
         plt.xlabel('False Positive Rate')
@@ -234,8 +231,6 @@ class MainApp(QMainWindow, FORM_CLASS):
         plt.title('ROC Curve with threshold = ' + str(self.recog_slider_2.value()) + ' and AUC = ' + str(auc_value))
         plt.text(0.6, 0.2, color='red', s='AUC = ' + str(auc_value))
         plt.grid(True)
-        #plt.savefig("ROC_CURVE.png")
-         # Render the plot onto a numpy array
         canvas = FigureCanvas(fig)
         canvas.draw()  # Render the canvas
         width, height = fig.get_size_inches() * fig.get_dpi()
@@ -247,6 +242,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         # Convert QImage to QPixmap and set it as the pixmap of roc_lbl
         pixmap = QPixmap.fromImage(qimage)
         self.roc_lbl.setPixmap(pixmap)
+
     def recognize_face_slider_change(self):
         self.recog_slider_lbl.setText("Recognition threshold : " + str(self.recog_slider.value()))
 
