@@ -2,52 +2,38 @@ import sys
 from os import path
 
 import cv2
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QPixmap, QImage, QPainter, QRegion, QPen
+import matplotlib.pyplot as plt
+import numpy as np
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QImage
 from PyQt5.QtWidgets import *
 from PyQt5.QtWidgets import QApplication
 from PyQt5.uic import loadUiType
-from matplotlib import pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from PyQt5.QtWidgets import QDialog, QVBoxLayout, QWidget
-from sklearn.metrics import auc, roc_curve
-import os
-os.environ['MPLBACKEND'] = 'Qt5Agg'
-import matplotlib.pyplot as plt
 
 import PCA
 from FaceDetection import face_detection, draw_rectangle
-import matplotlib.pyplot as plt
-import numpy as np
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure
 
-class ROCWidget(FigureCanvasQTAgg):
-    def __init__(self, parent=None):
-        self.fig = Figure()
-        self.ax = self.fig.add_subplot(111)
-        super().__init__(self.fig)
-
-    def plot_roc_curve(self, fpr, tpr):
-        self.ax.plot(fpr, tpr)
-        self.ax.set_xlabel('False Positive Rate')
-        self.ax.set_ylabel('True Positive Rate')
-        self.ax.set_title('Receiver Operating Characteristic Curve')
-        self.draw()
-
-def plot_roc_curve(fpr, tpr, roc_widget):
-    roc_widget.plot_roc_curve(fpr, tpr)
-
+# Load the UI file and the Python file
 FORM_CLASS, _ = loadUiType(
     path.join(path.dirname(__file__), "main.ui")
-)  # connects the Ui file with the Python file
-
+)
 
 class MainApp(QMainWindow, FORM_CLASS):
+    """
+    MainApp is a class for the main application window.
+
+    Attributes:
+        parent: A reference to the parent object.
+    """
+
     def __init__(self, parent=None):
+        """
+        The constructor for MainApp class.
+
+        Parameters:
+            parent (optional): A reference to the parent object.
+        """
         super(MainApp, self).__init__(parent)
         self.setupUi(self)
         self.handle_buttons()
@@ -64,7 +50,7 @@ class MainApp(QMainWindow, FORM_CLASS):
         )
         self.predicted_labels = []
         self.perform_pca()
-        
+
     def handle_buttons(self):
         """
         Connects buttons to their respective functions and initializes the application.
@@ -84,8 +70,6 @@ class MainApp(QMainWindow, FORM_CLASS):
         """
         if event.button() == Qt.LeftButton:
             self.load_image(label)
-        # elif event.button() == Qt.RightButton:
-        #     self.detect_face()
 
     def load_image(self, label):
         """
@@ -143,7 +127,28 @@ class MainApp(QMainWindow, FORM_CLASS):
 
     def perform_pca(self):
         """
-        Method to perform PCA on the images.
+        This method performs Principal Component Analysis (PCA) on the images.
+
+        It calculates the true positive rate, false positive rate, accuracy, precision, recall, specificity,
+        false positive rate value, and F1 score for the face recognition task. It also plots the ROC curve
+        and calculates the AUC score.
+
+        Attributes:
+            true_positive (int): The number of true positives.
+            false_positive (int): The number of false positives.
+            true_negative (int): The number of true negatives.
+            false_negative (int): The number of false negatives.
+            false_positive_rate (list): The list of false positive rates.
+            true_positive_rate (list): The list of true positive rates.
+            threshold (int): The threshold value for face recognition.
+            epsilon (float): A small constant to prevent division by zero.
+            accuracy (float): The accuracy of face recognition.
+            precision (float): The precision of face recognition.
+            recall (float): The recall of face recognition.
+            specificity (float): The specificity of face recognition.
+            false_positive_rate_value (float): The false positive rate value.
+            f1_score (float): The F1 score of face recognition.
+            auc_value (float): The AUC score of the ROC curve.
         """
         true_positive = 0
         false_positive = 0
@@ -198,10 +203,20 @@ class MainApp(QMainWindow, FORM_CLASS):
         # ROC Curve and AUC Score
         auc_value = self.calculate_auc(false_positive_rate, true_positive_rate)
         self.plot_roc(false_positive_rate, true_positive_rate, auc_value)
-            
-            
+
+
 
     def calculate_auc(self, false_positive_rate, true_positive_rate):
+        """
+       Method to calculate the area under the ROC curve.
+
+       Args:
+           false_positive_rate: The false positive rate.
+           true_positive_rate: The true positive rate.
+
+       Returns:
+           The area under the ROC curve.
+       """
         # Sort the TPR values in ascending order
         sorted_indices = sorted(range(len(false_positive_rate)), key=lambda i: false_positive_rate[i])
         sorted_fpr = [false_positive_rate[i] for i in sorted_indices]
@@ -223,6 +238,14 @@ class MainApp(QMainWindow, FORM_CLASS):
         return auc_value
 
     def plot_roc(self, false_positive_rate, true_positive_rate, auc_value):
+        """
+        Method to plot the ROC curve.
+
+        Args:
+           false_positive_rate: The false positive rate.
+           true_positive_rate: The true positive rate.
+               auc_value: The area under the ROC curve.
+       """
         # Sort the TPR values in ascending order
         sorted_indices = sorted(range(len(false_positive_rate)), key=lambda i: false_positive_rate[i])
         sorted_fpr = [false_positive_rate[i] for i in sorted_indices]
@@ -240,20 +263,27 @@ class MainApp(QMainWindow, FORM_CLASS):
         canvas.draw()  # Render the canvas
         width, height = fig.get_size_inches() * fig.get_dpi()
         img = np.frombuffer(canvas.buffer_rgba(), dtype=np.uint8).reshape(int(height), int(width), 4)
-        
+
         # Convert numpy array to QImage
         qimage = QImage(img.data, img.shape[1], img.shape[0], QImage.Format_RGBA8888)
-        
+
         # Convert QImage to QPixmap and set it as the pixmap of roc_lbl
         pixmap = QPixmap.fromImage(qimage)
         self.roc_lbl.setPixmap(pixmap)
 
     def recognize_face_slider_change(self):
+        """
+        Method to handle the change in the recognition threshold slider.
+        """
         self.recog_slider_lbl.setText("Recognition threshold : " + str(self.recog_slider.value()))
 
     def recognize_face_slider_change_2(self):
+        """
+        Method to handle the change in the recognition threshold slider.
+        """
         self.recog_slider_lbl_2.setText("Recognition threshold : " + str(self.recog_slider_2.value()))
         self.perform_pca()
+
 
 def main():
     """
