@@ -4,6 +4,18 @@ import os
 
 
 def load_images(root_folder, img_width=64, img_height=64):
+    """
+    Load images from a given root folder and resize them to the specified dimensions.
+
+    Args:
+        root_folder (str): The root directory where the images are stored.
+        img_width (int, optional): The width to which images should be resized. Defaults to 64.
+        img_height (int, optional): The height to which images should be resized. Defaults to 64.
+
+    Returns:
+        tuple: A tuple containing the list of flattened images, the list of non-flattened images,
+               the list of image paths, and the list of labels corresponding to the images.
+    """
     image_paths = []
     image_list = []
     images_not_flattened = []
@@ -35,13 +47,13 @@ def load_images(root_folder, img_width=64, img_height=64):
 
 def calculate_covariance_matrix(image_list):
     """
-    Method to calculate the covariance matrix of the image list.
+    Calculate the covariance matrix of a list of images.
 
     Args:
-        image_list: The list of images.
+        image_list (list): The list of images.
 
     Returns:
-        The covariance matrix.
+        tuple: A tuple containing the covariance matrix and the mean image.
     """
     # Calculate the mean of the images
     mean = np.mean(image_list, axis=0)
@@ -54,6 +66,15 @@ def calculate_covariance_matrix(image_list):
     return covariance_matrix, mean
 
 def get_eigenvalues_and_eigenvectors(covariance_matrix):
+    """
+    Compute the eigenvalues and eigenvectors of a given covariance matrix.
+
+    Args:
+        covariance_matrix (numpy.ndarray): The covariance matrix.
+
+    Returns:
+        tuple: A tuple containing the eigenvalues and eigenvectors.
+    """
     # Use numpy.linalg.eig to compute eigenvalues and eigenvectors
     eigenvalues, eigenvectors = np.linalg.eig(covariance_matrix)
     print("done computing eigenvectors")
@@ -66,6 +87,16 @@ def get_eigenvalues_and_eigenvectors(covariance_matrix):
 
 
 def pca_analysis(root_folder):
+    """
+    Perform Principal Component Analysis (PCA) on images from a given root folder.
+
+    Args:
+        root_folder (str): The root directory where the images are stored.
+
+    Returns:
+        tuple: A tuple containing the principal components, the projected data, the non-flattened images,
+               the image paths, the labels, and the mean image.
+    """
     images, images_not_flattened, image_paths, labels = load_images(root_folder)  # Load and preprocess images
     covariance_matrix, mean_image = calculate_covariance_matrix(images)  # Calculate covariance and mean
     eigenvalues, eigenvectors = get_eigenvalues_and_eigenvectors(covariance_matrix)  # Get eigenvalues and eigenvectors
@@ -87,7 +118,22 @@ def pca_analysis(root_folder):
 
 
 def detect_faces(image_path, recognition_threshold, principal_components, projected_data, labels, mean_image, img_width=64, img_height=64):
+    """
+    Detect faces in an image using PCA.
 
+    Args:
+        image_path (str): The path to the image.
+        recognition_threshold (float): The threshold for face recognition.
+        principal_components (numpy.ndarray): The principal components obtained from PCA.
+        projected_data (numpy.ndarray): The projected data obtained from PCA.
+        labels (list): The labels corresponding to the images.
+        mean_image (numpy.ndarray): The mean image.
+        img_width (int, optional): The width to which the image should be resized. Defaults to 64.
+        img_height (int, optional): The height to which the image should be resized. Defaults to 64.
+
+    Returns:
+        int: The ID of the detected face. Returns -1 if no face is detected.
+    """
     image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     # print("image shape: ", image.shape)
     image = cv2.resize(image, (img_width, img_height))
@@ -111,6 +157,9 @@ def detect_faces(image_path, recognition_threshold, principal_components, projec
 
 
 def main():
+    """
+    The main function to start the PCA analysis.
+    """
     print("Loading images...")
     pca_analysis("Dataset/Training")
 
