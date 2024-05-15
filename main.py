@@ -223,8 +223,13 @@ class MainApp(QMainWindow, FORM_CLASS):
         return auc_value
 
     def plot_roc(self, false_positive_rate, true_positive_rate, auc_value):
+        # Sort the TPR values in ascending order
+        sorted_indices = sorted(range(len(false_positive_rate)), key=lambda i: false_positive_rate[i])
+        sorted_fpr = [false_positive_rate[i] for i in sorted_indices]
+        sorted_tpr = [true_positive_rate[i] for i in sorted_indices]
+
         fig = plt.figure(figsize=(8, 6))
-        plt.plot(false_positive_rate, true_positive_rate)
+        plt.plot(sorted_fpr, sorted_tpr, color='blue', label='ROC Curve')
         plt.plot([0, 1], [0, 1], '--', color='gray')  # Random classifier line
         plt.xlabel('False Positive Rate')
         plt.ylabel('True Positive Rate')
