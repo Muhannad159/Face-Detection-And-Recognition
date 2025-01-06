@@ -1,4 +1,4 @@
-# Face Recognition and Detection App
+# Face Detection and Recognition App
 
 ## Introduction
 
