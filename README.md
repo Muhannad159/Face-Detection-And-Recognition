@@ -12,16 +12,17 @@ With an intuitive user interface and seamless integration of powerful image proc
 
 Discover the future of facial recognition with the Face Recognition and Detection App. Unleash the potential of your images and unlock a world of possibilities with just a click.
 
-![App Demo](demo_image.png)
+![Face Recognition](./Results.png "Sample results of the app")
+
 
 
 ## Features
 
 1. **Face Recognition**: Recognize faces in images based on a provided dataset. The app accurately identifies individuals present in the dataset.
-   ![Face Recognition](face_recognition.png)
+
 
 2. **Face Detection**: Detect faces in any photo. The app can locate and outline faces present in the image, providing valuable insights into image content.
-   ![Face Detection](face_detection.png)
+
 
 3. **PCA Performance Evaluation**:
    - **Accuracy**: Measure the accuracy of face recognition, indicating the proportion of correctly identified faces.
@@ -32,7 +33,7 @@ Discover the future of facial recognition with the Face Recognition and Detectio
    - **False Negative Rate**: Evaluate the rate of false negatives, indicating the proportion of incorrectly rejected faces among the actual positives.
    - **ROC Curve**: Visualize the Receiver Operating Characteristic (ROC) curve, providing insights into the trade-off between true positive rate and false positive rate.
 
-   ![PCA Performance](pca_performance.png)
+
 
 ## Technologies Used
 
